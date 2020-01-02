@@ -18,14 +18,16 @@ You will need the latest stable version of go installed on your machine:
 
 https://golang.org/dl/
 
-Run the following command to download and build for execution:
+Run the following commands to download and build for execution:
 
-`go get -u github.com/justinpage/go-web-calculator`
+1. `git clone https://github.com/justinpage/go-web-calculator.git`
+2. `cd go-web-calculator`
+3. `go build -o calculator main.go`
 
 ### Execute
 
 1. Launch web-based calculator:
-	- `go-web-calculator` or `go-web-calculator --port <number>`
+	- `./calcuator` or `./calculator --port <number>`
 2. Visit `localhost:<port-number>`
 	- By default, port number is `8080`.
 
@@ -36,4 +38,3 @@ Run the following command to download and build for execution:
 
 [sarah]: https://codepen.io/sfrisk/pen/BymJer
 [gopl]: http://www.gopl.io/
-
