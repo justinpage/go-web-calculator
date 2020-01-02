@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width">
+		<title>web-based calculator</title>
+		<style type="text/css" media="all">
+			body {
+				font-family: "HelveticaNeue-UltraLight", "Helvetica Ultra Light", "Helvetica Neue", Helvetica, Arial, sans-serif;
+				font-weight: 100;
+				background-color: #514a8b;
+			}
+
+			sub, sup {
+				font-size: 75%;
+				line-height: 0;
+				position: relative;
+			}
+
+			sup {
+				top: -0.4em;
+			}
+
+			sub {
+				bottom: -0em;
+			}
+
+			*:focus {
+				outline: 0
+			}
+
+			#appleCalculator {
+				margin: 0 auto;
+				width: 100px;
+			}
+
+			.calculator {
+				position: absolute;
+				top: 50%;
+				margin-top: -160px;
+				margin-left: -115px;
+				width: 347px;
+				height: 321px;
+				background: rgba(75, 75, 75, 0.55);
+				border-right: 1px solid #81df7f;
+				border-bottom: 1px solid #96abab;
+				border-left: 1px solid #81df7f;
+				border-top: 1px solid #96abab;
+				border-radius: 6px;
+				box-shadow: 0 0 20px 0 rgba(50, 50, 50, 0.75);
+			}
+
+			.readout {
+				font-size: 45px;
+				color: #ffffff;
+				background: transparent;
+				box-sizing: border-box;
+				display: block;
+				width: inherit;
+				border: 0;
+				margin: 28px 0 0 0;
+				text-align: right;
+				padding: 0 10px;
+				font-family: "HelveticaNeue-UltraLight", "Helvetica Ultra Light", "Helvetica Neue", Helvetica, Arial, sans-serif;
+				font-weight: 100;
+			}
+
+			.keys {
+				position: absolute;
+				bottom: 0;
+			}
+
+			.row {
+				padding-top: 1px;
+				clear: both;
+			}
+			.row .key:first-child {
+				margin-left: 0px;
+			}
+
+			.key {
+				width: 57px;
+				height: 47px;
+				font-size: 22px;
+				border: 0;
+				float: left;
+				margin-left: 1px;
+				font-family: "HelveticaNeue-UltraLight", "Helvetica Ultra Light", "Helvetica Neue", Helvetica, Arial, sans-serif;
+			}
+			.key.double {
+				width: 192px;
+				text-align: left;
+				padding-left: 25px;
+				border-bottom-left-radius: 6px;
+			}
+			.key.last {
+				border-bottom-right-radius: 6px;
+			}
+
+			.misc {
+				background: #d6d6d6;
+				font-size: 20px;
+				font-family: "HelveticaNeue-Light", "Helvetica Light", "Helvetica Neue", Helvetica, Arial, sans-serif;
+				width: 57px;
+				margin-left: .9px;
+
+			}
+			.misc:active {
+				background-color: #b0b0b0;
+			}
+			.misc.sqrt span {
+				font-size: 17px;
+				text-decoration: overline;
+			}
+
+			.function {
+				background: #b54a7b;
+				color: #ffffff;
+				font-size: 25px;
+			}
+			.function:active {
+				background-color: #963e67;
+			}
+			.function:focus{
+				border: solid 1px #fff7ef;
+			}
+
+			.numeric {
+				background: #e0e0e0;
+				font-family: "HelveticaNeue-Light", "Helvetica Light", "Helvetica Neue", Helvetica, Arial, sans-serif;
+				width: 95.5px;
+			}
+			.numeric:active {
+				background-color: #bababa;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="appleCalculator">
+			<div class="calculator">
+				<input class="readout" type='readonly' disabled>
+				<div class="keys">
+					<div class="row">
+						<button onclick="calculator.clear();" class="key misc clear">C</button>
+						<button onclick="calculator.set('-');" class="key misc"><sup>+</sup>/<sub>−</sub></button>
+						<button onclick="calculator.save('pow');" class="key misc">x<sup>y</sup></button>
+						<button onclick="calculator.execute('sqrt');" class="key misc sqrt">&radic;<span>&#8239;x</span></button>
+						<button onclick="calculator.execute('sin');" class="key misc sin">sin</button>
+						<button onclick="calculator.save('/');" class="key function">÷</button>
+					</div>
+					<div class="row">
+						<button onclick="calculator.set('7');" class="key numeric">7</button>
+						<button onclick="calculator.set('8');" class="key numeric">8</button>
+						<button onclick="calculator.set('9');" class="key numeric">9</button>
+						<button onclick="calculator.save('*');" class="key function">x</button>
+					</div>
+					<div class="row">
+						<button onclick="calculator.set('4');" class="key numeric">4</button>
+						<button onclick="calculator.set('5');" class="key numeric">5</button>
+						<button onclick="calculator.set('6');" class="key numeric">6</button>
+						<button onclick="calculator.save('-');" class="key function">-</button>
+					</div>
+					<div class="row">
+						<button onclick="calculator.set('1');" class="key numeric">1</button>
+						<button onclick="calculator.set('2');" class="key numeric">2</button>
+						<button onclick="calculator.set('3');" class="key numeric">3</button>
+						<button onclick="calculator.save('+');" class="key function">+</button>
+					</div>
+					<div class="row">
+						<button onclick="calculator.set('0');" class="key numeric double">0</button>
+						<button onclick="calculator.set('.');" class="key numeric">.</button>
+						<button onclick="calculator.calculate();"class="key function last">=</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script charset="utf-8">
+			function Expression(init) {
+				let values = init || { args: [] }
+
+				let evaluated = false
+				let pending = false
+
+				return {
+					storeOperator,
+					storeOperand,
+					storeFunction,
+					updateOperand,
+					evaluated,
+					calculate,
+					operator,
+					operands,
+					pending,
+					reset
+				}
+
+				function storeOperand(name) {
+					values.args.push(name)
+				}
+
+				function storeOperator(name) {
+					values.op = name
+				}
+
+				function storeFunction(name) {
+					values.fun = name
+				}
+
+				function updateOperand(index, value) {
+					values.args[index] = value
+				}
+
+				async function calculate() {
+					let expression
+					switch (values.op) {
+						case '+':
+							expression = `${values.args[0]}%2b${values.args[1]}`
+							break
+						case '-':
+							expression = `${values.args[0]}-${values.args[1]}`
+							break
+						case '*':
+							expression = `${values.args[0]}*${values.args[1]}`
+							break
+						case '/':
+							expression = `${values.args[0]}/${values.args[1]}`
+							break
+						case 'pow':
+							expression = `pow(${values.args[0]},${values.args[1]})`
+							break
+					}
+					switch (values.fun) {
+						case 'sqrt':
+							expression = `sqrt(${values.args[0]})`
+							break
+						case 'sin':
+							expression = `sin(${values.args[0]})`
+							break
+					}
+
+					// handle single unary operator expressions, e.g., -x
+					if (!expression) {
+						expression = values.args.reverse().join()
+					}
+
+					response = await fetch("calculate?expr=" + expression)
+					return await response.text()
+				}
+
+				function operands() {
+					return values.args
+				}
+
+				function operator() {
+					return values.op
+				}
+
+				function reset() {
+					values = { args: [] }
+				}
+			}
+
+			function Calculator(expression) {
+				var value = "0"
+
+				setReadout(value)
+
+				return {
+					set: setReadout,
+					save: saveReadout,
+					clear: clearReadout,
+					execute: runFunction,
+					calculate: runOperator,
+					operator: expression.operator,
+					operands: expression.operands
+				}
+
+
+				function setReadout(operand) {
+					document.getElementsByClassName("clear")[0].innerText = "C"
+					document.getElementsByClassName("clear")[0].onclick = clearReadout
+
+					let readout = document.getElementsByTagName("input")[0]
+
+					// ignore adding unary to zero value expressions
+					if (readout.value == "0" && operand == "-") {
+						return
+					}
+
+					// avoid leading zero when setting numbers
+					if (readout.value == "0") {
+						readout.value = operand
+						return
+					}
+
+					// toggle unary operand
+					if (operand == "-" && parseFloat(readout.value) < 0) {
+						readout.value = JSON.stringify(Math.abs(readout.value))
+						return
+					}
+
+					// make sure unary is ordered before operator
+					if (operand == '-') {
+						readout.value = operand + readout.value
+						return
+					}
+
+					// when an expression has been evaluated (e.g. i + n = x) or the
+					// expression is in a pending state (e.g. i + n where n is the last
+					// selected operator). This allows us to clear the readout when either
+					// states are true.
+					if (expression.evaluated || expression.pending) {
+						readout.value = operand
+						expression.evaluated = false
+						if (expression.pending) {
+							readout.value = operand
+							expression.pending = false
+							return
+						}
+						return
+					}
+
+					readout.value = readout.value + operand
+				}
+
+				async function saveReadout(operator) {
+					let readout = document.getElementsByTagName("input")[0]
+
+					// evaluate existing expression before continuing, e.g., (n + n) + n
+					if (expression.operator()) {
+						expression.updateOperand(1, readout.value)
+						readout.value = await expression.calculate()
+						expression.reset()
+					}
+
+					let operand = readout.value
+					expression.storeOperand(operand)
+					expression.storeOperator(operator)
+					expression.pending = true
+				}
+
+				function clearReadout() {
+					document.getElementsByTagName("input")[0].value = 0
+					document.getElementsByClassName("clear")[0].innerText = "AC"
+					document.getElementsByClassName("clear")[0].onclick = clearAllReadout
+					expression.evaluated = false
+				}
+
+				function clearAllReadout() {
+					document.getElementsByTagName("input")[0].value = 0
+					expression.pending = false
+					expression.reset()
+				}
+
+				async function runFunction(fun) {
+					let readout = document.getElementsByTagName("input")[0]
+
+					expression.storeOperand(readout.value)
+					expression.storeFunction(fun)
+
+					readout.value = await expression.calculate()
+					expression.reset()
+				}
+
+				async function runOperator() {
+					let readout = document.getElementsByTagName("input")[0]
+
+					// support unary and literal expressions without operators
+					if (readout.value < 0 || expression.operands().length == 0) {
+						expression.storeOperand(readout.value)
+						readout.value = await expression.calculate()
+						expression.reset()
+						return
+					}
+
+					expression.updateOperand(1, readout.value) // account for multi-digit
+					readout.value = await expression.calculate()
+					expression.evaluated = true
+					expression.reset()
+				}
+			}
+
+			var calculator = new Calculator(new Expression)
+		</script>
+	</body>
+</html>
